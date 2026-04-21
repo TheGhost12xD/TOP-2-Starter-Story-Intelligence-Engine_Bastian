@@ -4,7 +4,10 @@
   "description": "Una aplicación inteligente diseñada para extraer automáticamente información rica de los videos de **Starter Story** mediante data scraping. Los datos de ingresos y modelos de negocio recolectados se clasifican utilizando Inteligencia Artificial (LLMs) contra una matriz de problemas (Pain Points) endémicos de la región **LATAM** y se cruzan con el **perfil RPM** (Recursos, Pasiones y Mercado) del usuario.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "repository": {
     "type": "git",
