@@ -3,10 +3,10 @@ import { ApifyClient } from "apify-client";
 
 export async function GET(
   req: Request,
-  { params }: { params: { runId: string } }
+  context: { params: Promise<{ runId: string }> }
 ) {
   try {
-    const runId = params.runId;
+    const { runId } = await context.params;
     if (!runId) {
       return NextResponse.json({ error: "Falta el runId" }, { status: 400 });
     }
