@@ -24,9 +24,11 @@ export async function POST(request: Request) {
     const actorId = 'bbqmsPr0r519A0ZaV';
     const webhookUrl = `https://${appUrl}/api/webhooks/apify`;
 
-    // Formateamos las URLs tal como las requiere el actor de Apify
+    // Extraemos la primera URL y formateamos el input requerido por este actor
+    const targetUrl = inputUrls.length > 0 ? inputUrls[0] : '';
     const actorInput = {
-      startUrls: inputUrls.map((url: string) => ({ url }))
+      videoUrl: targetUrl,
+      language: "en"
     };
 
     // AWAIT es estrictamente necesario en Vercel para no matar el proceso serverless
