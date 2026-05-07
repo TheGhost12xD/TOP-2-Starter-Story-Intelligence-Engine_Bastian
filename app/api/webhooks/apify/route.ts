@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     for (const item of items) {
       // Mapear los datos según la lógica estricta solicitada
-      const rawUrl = item.url || item.videoUrl || '';
+      const rawUrl = (item.url || item.videoUrl || '') as string;
       const youtube_video_id = extractVideoId(rawUrl);
       const title = item.title || item.video_title || '';
       const transcript = getTranscript(item);
