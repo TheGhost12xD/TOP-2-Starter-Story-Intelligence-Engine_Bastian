@@ -8,9 +8,11 @@ export async function POST(request: Request) {
     // El frontend puede enviar un array directamente o un objeto con { urls: [...] }
     const inputUrls = Array.isArray(body) ? body : (body.urls || []);
 
-    if (!process.env.APIFY_API_TOKEN || !process.env.NEXT_PUBLIC_APP_URL) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+
+    if (!process.env.APIFY_API_TOKEN || !appUrl) {
       return NextResponse.json(
-        { error: 'Faltan variables de entorno (APIFY_API_TOKEN o NEXT_PUBLIC_APP_URL)' },
+        { error: 'Faltan variables de entorno (APIFY_API_TOKEN o URL de la app)' },
         { status: 500 }
       );
     }
@@ -20,7 +22,7 @@ export async function POST(request: Request) {
     });
 
     const actorId = 'bbqmsPr0r519A0ZaV';
-    const webhookUrl = `https://${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/apify`;
+    const webhookUrl = `https://${appUrl}/api/webhooks/apify`;
 
     // Formateamos las URLs tal como las requiere el actor de Apify
     const actorInput = {
