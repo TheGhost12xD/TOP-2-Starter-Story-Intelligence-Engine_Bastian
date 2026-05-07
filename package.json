@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.3",
+    "apify-client": "^2.23.2"
+  }
+}
