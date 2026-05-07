@@ -72,7 +72,7 @@ export default async function Home() {
                       </td>
                       <td className="px-6 py-5 text-sm">
                         <a 
-                          href={video.url || \`https://www.youtube.com/watch?v=\${video.youtube_video_id}\`}
+                          href={video.url || `https://www.youtube.com/watch?v=${video.youtube_video_id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-indigo-600 hover:text-indigo-800 font-medium hover:underline inline-flex items-center"
