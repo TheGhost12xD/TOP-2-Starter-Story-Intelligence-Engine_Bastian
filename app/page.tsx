@@ -10,8 +10,8 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function Home() {
-  const [url, setUrl] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [isScraping, setIsScraping] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
   const [videosCount, setVideosCount] = useState(0);
 
@@ -33,29 +33,29 @@ export default function Home() {
 
   const handleExtract = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url) return;
+    if (!videoUrl) return;
 
-    setLoading(true);
+    setIsScraping(true);
     setStatusMsg('');
 
     try {
       const response = await fetch('/api/scraper/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls: [url] }),
+        body: JSON.stringify({ urls: [videoUrl] }),
       });
 
       if (!response.ok) {
         throw new Error('Error en la solicitud');
       }
 
-      setStatusMsg('¡Extracción iniciada en background!');
-      setUrl('');
+      alert('Scraping iniciado en background. Apify está trabajando y los datos se guardarán en Supabase al terminar.');
+      setVideoUrl('');
     } catch (error) {
       console.error(error);
-      setStatusMsg('Error al iniciar scraper.');
+      alert('Ocurrió un error al intentar iniciar la extracción.');
     } finally {
-      setLoading(false);
+      setIsScraping(false);
     }
   };
 
@@ -137,19 +137,19 @@ export default function Home() {
               <form onSubmit={handleExtract} className="flex gap-2">
                 <input
                   type="url"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
                   placeholder="https://youtube.com/watch?v=..."
                   className="flex-1 bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-shadow placeholder:text-zinc-600"
                   required
-                  disabled={loading}
+                  disabled={isScraping}
                 />
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={isScraping}
                   className="bg-zinc-100 hover:bg-white text-zinc-900 font-medium px-4 py-2 rounded-md text-sm transition-colors disabled:opacity-50"
                 >
-                  {loading ? 'Procesando...' : 'Extraer'}
+                  {isScraping ? 'Iniciando...' : 'Extraer'}
                 </button>
               </form>
               {statusMsg && (
