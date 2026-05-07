@@ -29,8 +29,8 @@ export async function POST(request: Request) {
       startUrls: inputUrls.map((url: string) => ({ url }))
     };
 
-    // Iniciar el actor de forma asíncrona inyectando el webhook
-    client.actor(actorId).start(actorInput, {
+    // AWAIT es estrictamente necesario en Vercel para no matar el proceso serverless
+    const run = await client.actor(actorId).start(actorInput, {
       webhooks: [
         {
           eventTypes: ['ACTOR.RUN.SUCCEEDED'],
@@ -38,17 +38,17 @@ export async function POST(request: Request) {
           payloadTemplate: `{\n  "eventType": "{{eventType}}",\n  "eventData": {{eventData}},\n  "resource": {{resource}}\n}`,
         },
       ],
-    }).catch(error => {
-      console.error('Error al iniciar el scraper en background:', error);
     });
 
     return NextResponse.json({
       success: true,
       message: 'Scraping iniciado en background...',
+      runId: run.id
     }, { status: 200 });
 
   } catch (error) {
     console.error('Error en la ruta disparadora del scraper:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    return NextResponse.json({ error: 'Error interno del servidor: ' + errorMessage }, { status: 500 });
   }
 }
