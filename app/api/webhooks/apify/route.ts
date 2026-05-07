@@ -35,17 +35,17 @@ export async function POST(request: Request) {
       const transcript = item.transcript || item.text;
 
       // Generar la URL completa del video
-      const fullUrl = video_id ? \`https://www.youtube.com/watch?v=\${video_id}\` : '';
+      const fullUrl = video_id ? `https://www.youtube.com/watch?v=${video_id}` : '';
 
       // Filtro estricto según gemini.md: Sin transcripción se ignora
       if (!transcript) {
-        console.log(\`[Webhook] Saltando video \${video_id} - Sin transcripción\`);
+        console.log(`[Webhook] Saltando video ${video_id} - Sin transcripción`);
         continue;
       }
 
       // Si tenemos duración, aplicamos el filtro de 1 hora (> 3600 seg)
-      if (item.duration && item.duration > 3600) {
-        console.log(\`[Webhook] Saltando video \${video_id} - Excede 1 hora de duración\`);
+      if (item.duration && Number(item.duration) > 3600) {
+        console.log(`[Webhook] Saltando video ${video_id} - Excede 1 hora de duración`);
         continue;
       }
 
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         });
 
       if (error) {
-        console.error(\`[Webhook] Error al hacer upsert de \${video_id}:\`, error);
+        console.error(`[Webhook] Error al hacer upsert de ${video_id}:`, error);
       } else {
         processedCount++;
       }
