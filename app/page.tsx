@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Play, CheckCircle2, Circle, ChevronRight } from 'lucide-react';
+import { Play, CheckCircle2, Circle, ChevronRight, RefreshCw } from 'lucide-react';
 
 // Inicializamos cliente Supabase público
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -13,21 +13,40 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState('');
   const [isScraping, setIsScraping] = useState(false);
   const [statusMsg, setStatusMsg] = useState('');
-  const [videosCount, setVideosCount] = useState(0);
+  
+  // Estados reactivos para el Dashboard
+  const [totalVideos, setTotalVideos] = useState(0);
+  const [lastVideoDate, setLastVideoDate] = useState<string | null>(null);
+  const [isFetching, setIsFetching] = useState(false);
 
   useEffect(() => {
-    fetchStats();
+    fetchDashboardStats();
   }, []);
 
-  const fetchStats = async () => {
+  const fetchDashboardStats = async () => {
+    setIsFetching(true);
     try {
+      // Consulta total de videos
       const { count } = await supabase
         .from('videos')
         .select('*', { count: 'exact', head: true });
       
-      if (count !== null) setVideosCount(count);
+      if (count !== null) setTotalVideos(count);
+
+      // Consulta última ejecución (último video insertado)
+      const { data } = await supabase
+        .from('videos')
+        .select('created_at')
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (data && data.length > 0) {
+        setLastVideoDate(data[0].created_at);
+      }
     } catch (e) {
-      console.error('Error fetching stats', e);
+      console.error('Error fetching dashboard stats', e);
+    } finally {
+      setIsFetching(false);
     }
   };
 
@@ -83,10 +102,10 @@ export default function Home() {
       {/* Stats Grid */}
       <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
-          { label: 'VIDEOS', value: videosCount || 10 },
-          { label: 'ANALIZADOS (IA)', value: videosCount || 10 },
-          { label: 'PAIN POINTS', value: 40 },
-          { label: 'CLASIFICACIONES', value: 52 },
+          { label: 'VIDEOS', value: totalVideos },
+          { label: 'ANALIZADOS (IA)', value: 0 },
+          { label: 'PAIN POINTS', value: 0 },
+          { label: 'CLASIFICACIONES', value: 0 },
           { label: 'SOLUCIONES', value: 0 },
         ].map((stat, i) => (
           <div key={i} className="bg-zinc-950 rounded-xl border border-zinc-800 p-5 flex flex-col justify-between hover:border-zinc-700 transition-colors">
@@ -103,16 +122,28 @@ export default function Home() {
         <div className="bg-zinc-950 rounded-xl border border-zinc-800 flex flex-col overflow-hidden">
           <div className="p-6 flex-1 flex flex-col">
             <div className="flex items-center justify-between mb-8">
-              <h2 className="text-base font-semibold text-zinc-100 flex items-center">
-                <Play className="w-4 h-4 mr-2 text-zinc-400" />
-                Última ejecución
-              </h2>
+              <div className="flex items-center">
+                <h2 className="text-base font-semibold text-zinc-100 flex items-center">
+                  <Play className="w-4 h-4 mr-2 text-zinc-400" />
+                  Última ejecución
+                </h2>
+                <button 
+                  onClick={fetchDashboardStats}
+                  disabled={isFetching}
+                  className="ml-3 p-1.5 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-50"
+                  title="Refrescar datos"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
               <div className="flex items-center space-x-3">
-                <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 rounded">
-                  running
+                <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded">
+                  {lastVideoDate ? 'ACTIVO' : 'ESPERANDO'}
                 </span>
                 <span className="text-xs text-zinc-500">
-                  {new Date().toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  {lastVideoDate 
+                    ? new Date(lastVideoDate).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+                    : '--/--/--'}
                 </span>
               </div>
             </div>
