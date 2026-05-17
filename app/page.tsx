@@ -1,100 +1,30 @@
-'use client';
+import { supabaseAdmin } from '@/lib/supabaseClient';
+import ExtractForm from '@/components/ExtractForm';
+import { Play, CheckCircle2, ChevronRight, Video } from 'lucide-react';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { Play, CheckCircle2, Circle, ChevronRight, RefreshCw } from 'lucide-react';
+export default async function Home() {
+  // Fetch videos from Supabase
+  const { data: videos, error } = await supabaseAdmin
+    .from('videos')
+    .select('*')
+    .order('created_at', { ascending: false });
 
-// Inicializamos cliente Supabase público
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-export default function Home() {
-  const [videoUrl, setVideoUrl] = useState('');
-  const [isScraping, setIsScraping] = useState(false);
-  const [statusMsg, setStatusMsg] = useState('');
-  
-  // Estados reactivos para el Dashboard
-  const [totalVideos, setTotalVideos] = useState(0);
-  const [lastVideoDate, setLastVideoDate] = useState<string | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
-
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
-
-  const fetchDashboardStats = async () => {
-    setIsFetching(true);
-    try {
-      // Consulta total de videos
-      const { count } = await supabase
-        .from('videos')
-        .select('*', { count: 'exact', head: true });
-      
-      if (count !== null) setTotalVideos(count);
-
-      // Consulta última ejecución (último video insertado)
-      const { data } = await supabase
-        .from('videos')
-        .select('created_at')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (data && data.length > 0) {
-        setLastVideoDate(data[0].created_at);
-      }
-    } catch (e) {
-      console.error('Error fetching dashboard stats', e);
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
-  const handleExtract = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!videoUrl) return;
-
-    setIsScraping(true);
-    setStatusMsg('');
-
-    try {
-      const response = await fetch('/api/scraper/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ urls: [videoUrl] }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error en la solicitud');
-      }
-
-      alert('Scraping iniciado en background. Apify está trabajando y los datos se guardarán en Supabase al terminar.');
-      setVideoUrl('');
-    } catch (error) {
-      console.error(error);
-      alert('Ocurrió un error al intentar iniciar la extracción.');
-    } finally {
-      setIsScraping(false);
-    }
-  };
+  const totalVideos = videos ? videos.length : 0;
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
-      
-      {/* Header / Hero Card */}
+      {/* Hero Card */}
       <section className="relative overflow-hidden rounded-2xl bg-zinc-900/50 border border-zinc-800/80 p-8 md:p-12">
-        {/* Glow sutil */}
         <div className="absolute -top-32 -right-32 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        
         <div className="relative z-10">
           <div className="inline-flex items-center px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-xs font-medium text-indigo-300 mb-6">
-            v0.4 - Etapa 4 desplegada
+            v0.5 - Integración de Supabase & Server Components
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-zinc-100 mb-4 tracking-tight">
-            Encuentra tu próxima idea de negocio en LATAM
+            Dashboard Analítico: Starter Story
           </h1>
           <p className="text-zinc-400 max-w-3xl text-base md:text-lg leading-relaxed">
-            Esta app extrae los videos de Starter Story, los clasifica contra pain points reales del mercado latinoamericano y los cruza con tu perfil RPM para proponer soluciones viables.
+            Explora los casos de negocio extraídos. El webhook de Apify actualiza los datos en tiempo real y el frontend se reconstruye automáticamente.
           </p>
         </div>
       </section>
@@ -115,125 +45,86 @@ export default function Home() {
         ))}
       </section>
 
-      {/* 2 Columns Section */}
+      {/* Actions Section */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Columna Izquierda: Última Ejecución */}
-        <div className="bg-zinc-950 rounded-xl border border-zinc-800 flex flex-col overflow-hidden">
-          <div className="p-6 flex-1 flex flex-col">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center">
-                <h2 className="text-base font-semibold text-zinc-100 flex items-center">
-                  <Play className="w-4 h-4 mr-2 text-zinc-400" />
-                  Última ejecución
-                </h2>
-                <button 
-                  onClick={fetchDashboardStats}
-                  disabled={isFetching}
-                  className="ml-3 p-1.5 rounded-md hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100 transition-colors disabled:opacity-50"
-                  title="Refrescar datos"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-              <div className="flex items-center space-x-3">
-                <span className="px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded">
-                  {lastVideoDate ? 'ACTIVO' : 'ESPERANDO'}
-                </span>
-                <span className="text-xs text-zinc-500">
-                  {lastVideoDate 
-                    ? new Date(lastVideoDate).toLocaleString('es-ES', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
-                    : '--/--/--'}
-                </span>
-              </div>
-            </div>
+        <ExtractForm />
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div>
-                <p className="text-[10px] font-medium text-zinc-500 mb-1 uppercase tracking-wider">Encontrados</p>
-                <p className="text-2xl font-semibold text-zinc-100">0</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-medium text-zinc-500 mb-1 uppercase tracking-wider">Nuevos</p>
-                <p className="text-2xl font-semibold text-indigo-400">0</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-medium text-zinc-500 mb-1 uppercase tracking-wider">Actualizados</p>
-                <p className="text-2xl font-semibold text-zinc-100">0</p>
-              </div>
-            </div>
-
-            <div className="mt-auto pt-6 border-t border-zinc-800/50">
-              <h3 className="text-sm font-medium text-zinc-300 mb-3">Ejecutar Extracción Manual</h3>
-              <form onSubmit={handleExtract} className="flex gap-2">
-                <input
-                  type="url"
-                  value={videoUrl}
-                  onChange={(e) => setVideoUrl(e.target.value)}
-                  placeholder="https://youtube.com/watch?v=..."
-                  className="flex-1 bg-zinc-900 border border-zinc-800 text-sm text-zinc-100 rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-shadow placeholder:text-zinc-600"
-                  required
-                  disabled={isScraping}
-                />
-                <button
-                  type="submit"
-                  disabled={isScraping}
-                  className="bg-zinc-100 hover:bg-white text-zinc-900 font-medium px-4 py-2 rounded-md text-sm transition-colors disabled:opacity-50"
-                >
-                  {isScraping ? 'Iniciando...' : 'Extraer'}
-                </button>
-              </form>
-              {statusMsg && (
-                <p className={`mt-3 text-xs font-medium ${statusMsg.includes('Error') ? 'text-red-400' : 'text-emerald-400'}`}>
-                  {statusMsg}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Columna Derecha: Próximos Pasos */}
         <div className="bg-zinc-950 rounded-xl border border-zinc-800 overflow-hidden">
           <div className="p-6 border-b border-zinc-800">
             <h2 className="text-base font-semibold text-zinc-100 flex items-center">
               <CheckCircle2 className="w-4 h-4 mr-2 text-zinc-400" />
-              Próximos pasos
+              Estado del Sistema
             </h2>
           </div>
-
-          <div className="flex flex-col">
-            {[
-              { title: 'Configura tus claves', desc: 'Apify y Anthropic en Ajustes', done: true },
-              { title: 'Scrapea videos', desc: '10/30 videos - objetivo de la entrega', done: true },
-              { title: 'Análisis IA', desc: '10 con análisis', done: true },
-              { title: 'Completa tu RPM', desc: 'Define Results, Purpose, Massive Action', done: true },
-              { title: 'Clasifica vs pain points LATAM', desc: '52 clasificaciones', done: true },
-              { title: 'Genera soluciones', desc: 'Cruza pain points + RPM + videos', done: false },
-            ].map((step, idx, arr) => (
-              <div key={idx} className={`relative flex items-center p-4 hover:bg-zinc-900/50 transition-colors cursor-pointer ${idx !== arr.length - 1 ? 'border-b border-zinc-800/50' : ''}`}>
-                <div className="mr-4 flex-shrink-0">
-                  {step.done ? (
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-zinc-700 flex items-center justify-center">
-                      <span className="text-[10px] text-zinc-500 font-medium">{idx + 1}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className={`text-sm font-medium truncate ${step.done ? 'text-zinc-300' : 'text-zinc-100'}`}>
-                    {step.title}
-                  </h4>
-                  <p className="text-xs text-zinc-500 mt-0.5 truncate">{step.desc}</p>
-                </div>
-                <div className="ml-4 flex-shrink-0 text-zinc-600">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </div>
-            ))}
+          <div className="p-6">
+            <p className="text-zinc-400 text-sm leading-relaxed">
+              La tabla de <strong className="text-zinc-200">videos</strong> se lee desde la base de datos usando Server Components. 
+              Cuando el Scraper de Apify termina y envía los datos vía Webhook, el sistema guarda en Supabase e invoca <code className="text-indigo-400 bg-zinc-900 px-1 py-0.5 rounded ml-1">revalidatePath('/')</code>.
+              Esto le indica a Next.js que purgue la caché y renderice nuevamente la página, por lo que verás los nuevos videos al instante sin tener que refrescar manualmente.
+            </p>
           </div>
         </div>
+      </section>
 
+      {/* Videos Grid */}
+      <section>
+        <div className="flex items-center mb-6">
+          <Video className="w-5 h-5 mr-3 text-indigo-400" />
+          <h2 className="text-xl font-bold text-zinc-100">Casos de Negocio Extraídos</h2>
+        </div>
+
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl mb-6">
+            <p className="text-sm font-medium">Error cargando videos: {error.message}</p>
+          </div>
+        )}
+
+        {!videos || videos.length === 0 ? (
+          <div className="bg-zinc-900/50 border border-zinc-800 border-dashed rounded-xl p-12 text-center">
+            <Video className="w-10 h-10 text-zinc-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-zinc-300 mb-2">No hay videos guardados</h3>
+            <p className="text-zinc-500 text-sm max-w-sm mx-auto">
+              Aún no has extraído ningún video o el scraper no ha terminado de guardar los datos en Supabase.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {videos.map((video) => (
+              <a 
+                key={video.id} 
+                href={`https://youtube.com/watch?v=${video.youtube_video_id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden hover:border-indigo-500/50 transition-all hover:shadow-[0_0_15px_rgba(99,102,241,0.1)] flex flex-col"
+              >
+                <div className="relative aspect-video bg-zinc-900 border-b border-zinc-800 overflow-hidden">
+                  <img 
+                    src={`https://img.youtube.com/vi/${video.youtube_video_id}/mqdefault.jpg`} 
+                    alt={video.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-300" />
+                  <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-[10px] font-medium text-white flex items-center">
+                    <Play className="w-3 h-3 mr-1" /> Ver en YouTube
+                  </div>
+                </div>
+                <div className="p-4 flex flex-col flex-1">
+                  <h3 className="text-sm font-semibold text-zinc-100 line-clamp-2 mb-2 group-hover:text-indigo-400 transition-colors" title={video.title}>
+                    {video.title}
+                  </h3>
+                  <div className="mt-auto pt-3 flex items-center justify-between text-[10px] text-zinc-500">
+                    <span className="bg-zinc-900 px-2 py-1 rounded border border-zinc-800 font-mono">
+                      {video.youtube_video_id}
+                    </span>
+                    <span>
+                      {new Date(video.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

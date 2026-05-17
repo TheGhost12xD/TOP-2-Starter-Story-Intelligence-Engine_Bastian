@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import { revalidatePath } from 'next/cache';
 
 export async function POST(request: Request) {
   try {
@@ -50,6 +51,7 @@ export async function POST(request: Request) {
       } else {
         console.log(`[Webhook] Éxito guardando video: ${youtube_video_id}`);
         processedCount++;
+        revalidatePath('/');
       }
     }
 
