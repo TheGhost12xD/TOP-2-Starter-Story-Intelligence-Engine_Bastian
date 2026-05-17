@@ -1,53 +1,25 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 import { Search, ExternalLink, Video } from 'lucide-react';
+import Link from 'next/link';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export default async function VideosPage({
+  searchParams,
+}: {
+  searchParams: { [key: string]: string | string[] | undefined }
+}) {
+  // Asegurarnos de soportar búsqueda básica vía SSR si se agrega '?q=' a la URL
+  const q = typeof searchParams.q === 'string' ? searchParams.q : '';
 
-type VideoRecord = {
-  id: string;
-  youtube_video_id: string;
-  title: string;
-  created_at: string;
-};
+  let query = supabaseAdmin
+    .from('videos')
+    .select('id, youtube_video_id, title, created_at')
+    .order('created_at', { ascending: false });
 
-export default function VideosPage() {
-  const [videos, setVideos] = useState<VideoRecord[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isFetching, setIsFetching] = useState(true);
+  if (q) {
+    query = query.ilike('title', `%${q}%`);
+  }
 
-  useEffect(() => {
-    fetchVideos();
-  }, []);
-
-  const fetchVideos = async () => {
-    setIsFetching(true);
-    try {
-      const { data, error } = await supabase
-        .from('videos')
-        .select('id, youtube_video_id, title, created_at')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setVideos(data || []);
-    } catch (error) {
-      console.error('Error fetching videos:', error);
-    } finally {
-      setIsFetching(false);
-    }
-  };
-
-  const filteredVideos = videos.filter(v => 
-    v.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleVerDetalles = (title: string) => {
-    console.log(`Detalles del video: ${title}`);
-  };
+  const { data: videos, error } = await query;
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
@@ -63,18 +35,18 @@ export default function VideosPage() {
           </p>
         </div>
         
-        <div className="relative w-full md:w-72">
+        <form method="GET" action="/videos" className="relative w-full md:w-72">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-zinc-500" />
           </div>
           <input
             type="text"
+            name="q"
+            defaultValue={q}
             className="block w-full pl-10 pr-3 py-2 border border-zinc-800 rounded-md leading-5 bg-zinc-900/50 text-zinc-300 placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors"
-            placeholder="Buscar por título..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar por título (Presiona Enter)..."
           />
-        </div>
+        </form>
       </div>
 
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden">
@@ -97,23 +69,23 @@ export default function VideosPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800/50">
-              {isFetching ? (
+              {error ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-sm text-zinc-500">
-                    Cargando videos...
+                  <td colSpan={4} className="px-6 py-12 text-center text-sm text-red-400">
+                    Ocurrió un error cargando los videos: {error.message}
                   </td>
                 </tr>
-              ) : filteredVideos.length === 0 ? (
+              ) : !videos || videos.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-12 text-center text-sm text-zinc-500">
-                    Aún no hay videos registrados.
+                    {q ? 'No se encontraron videos que coincidan con la búsqueda.' : 'Aún no hay videos registrados.'}
                   </td>
                 </tr>
               ) : (
-                filteredVideos.map((video) => (
+                videos.map((video) => (
                   <tr key={video.id} className="hover:bg-zinc-900/30 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-zinc-200 truncate max-w-sm">
+                      <div className="text-sm font-medium text-zinc-200 truncate max-w-sm" title={video.title}>
                         {video.title}
                       </div>
                     </td>
@@ -139,8 +111,8 @@ export default function VideosPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <button 
-                        onClick={() => handleVerDetalles(video.title)}
                         className="text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-700/50 px-3 py-1.5 rounded-md transition-colors"
+                        title="Ver Detalles (Próximamente)"
                       >
                         Ver Detalles
                       </button>

@@ -52,6 +52,7 @@ export async function POST(request: Request) {
         console.log(`[Webhook] Éxito guardando video: ${youtube_video_id}`);
         processedCount++;
         revalidatePath('/');
+        revalidatePath('/videos');
       }
     }
 
