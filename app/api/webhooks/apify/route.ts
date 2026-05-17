@@ -4,10 +4,13 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 import { revalidatePath } from 'next/cache';
 
 export async function POST(request: Request) {
+  let run_id = 'unknown';
   try {
     const payload = await request.json();
 
-    const { defaultDatasetId } = payload.resource || {};
+    const { defaultDatasetId, id } = payload.resource || {};
+    run_id = id || defaultDatasetId || crypto.randomUUID();
+
     if (!defaultDatasetId) {
       return NextResponse.json({ error: 'Falta defaultDatasetId en el webhook' }, { status: 400 });
     }
@@ -56,10 +59,37 @@ export async function POST(request: Request) {
       }
     }
 
+    // Guardar el log en scraping_logs
+    const { error: logError } = await supabaseAdmin
+      .from('scraping_logs')
+      .insert({
+        run_id,
+        status: 'success',
+        videos_processed: processedCount
+      });
+
+    if (logError) {
+      console.error('[Webhook] Error guardando log en scraping_logs:', logError.message);
+    }
+
+    // Revalidar la vista de logs
+    revalidatePath('/scraper-logs');
+
     return NextResponse.json({ success: true, processed: processedCount }, { status: 200 });
 
   } catch (error) {
     console.error('[Webhook] Error crítico procesando dataset:', error);
+    
+    // Registrar error en scraping_logs si es posible
+    if (run_id !== 'unknown') {
+      await supabaseAdmin.from('scraping_logs').insert({
+        run_id,
+        status: 'error',
+        videos_processed: 0
+      });
+      revalidatePath('/scraper-logs');
+    }
+
     return NextResponse.json({ success: false, error: 'Proceso abortado' }, { status: 200 });
   }
 }
