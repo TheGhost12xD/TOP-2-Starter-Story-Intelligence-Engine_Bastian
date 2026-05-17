@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { Search, ExternalLink, Video } from 'lucide-react';
 import Link from 'next/link';
+import RealtimeVideosTable from '@/components/RealtimeVideosTable';
 
 export default async function VideosPage({
   searchParams,
@@ -50,79 +51,7 @@ export default async function VideosPage({
       </div>
 
       <div className="bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-800">
-            <thead className="bg-zinc-900/50">
-              <tr>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  Título del Video
-                </th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  ID YouTube
-                </th>
-                <th scope="col" className="px-6 py-4 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  Fecha Extracción
-                </th>
-                <th scope="col" className="px-6 py-4 text-right text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/50">
-              {error ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-sm text-red-400">
-                    Ocurrió un error cargando los videos: {error.message}
-                  </td>
-                </tr>
-              ) : !videos || videos.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-sm text-zinc-500">
-                    {q ? 'No se encontraron videos que coincidan con la búsqueda.' : 'Aún no hay videos registrados.'}
-                  </td>
-                </tr>
-              ) : (
-                videos.map((video) => (
-                  <tr key={video.id} className="hover:bg-zinc-900/30 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-zinc-200 truncate max-w-sm" title={video.title}>
-                        {video.title}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <a 
-                        href={`https://youtube.com/watch?v=${video.youtube_video_id}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
-                      >
-                        {video.youtube_video_id}
-                        <ExternalLink className="w-3 h-3 ml-1" />
-                      </a>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-500">
-                      {new Date(video.created_at).toLocaleDateString('es-ES', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button 
-                        className="text-zinc-400 hover:text-white bg-zinc-800/50 hover:bg-zinc-700/50 px-3 py-1.5 rounded-md transition-colors"
-                        title="Ver Detalles (Próximamente)"
-                      >
-                        Ver Detalles
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <RealtimeVideosTable initialVideos={videos || []} searchQuery={q} />
       </div>
     </div>
   );
