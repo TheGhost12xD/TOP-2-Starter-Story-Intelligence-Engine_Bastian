@@ -35,10 +35,10 @@ export async function POST(request: Request) {
 
       const youtube_video_id = item.video_id;
       const title = item.video_title || 'Sin título';
-      const transcript = item.transcript || '';
+      const transcript = typeof item.transcript === 'string' ? item.transcript : '';
 
       if (!youtube_video_id || !transcript) {
-        console.log(`[Webhook] Omitiendo item incompleto. Video ID: ${youtube_video_id}`);
+        console.log(`[Webhook] Omitiendo item incompleto o transcript inválido. Video ID: ${youtube_video_id}`);
         continue;
       }
 
@@ -47,7 +47,8 @@ export async function POST(request: Request) {
       try {
         if (process.env.GROQ_API_KEY) {
           const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-          const truncatedTranscript = transcript.substring(0, 6000);
+          const safeTranscript = String(transcript);
+          const truncatedTranscript = safeTranscript.substring(0, 6000);
           
           const completion = await groq.chat.completions.create({
             messages: [
