@@ -192,7 +192,7 @@ export default function MvtPage() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Evidencia</h3>
+                  <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">Evidencia</h4>
                   <a href={testRecord.evidence_url} target="_blank" rel="noreferrer" className="inline-flex items-center text-sm text-indigo-400 hover:text-indigo-300">
                     <LinkIcon className="w-4 h-4 mr-1.5" />
                     Ver Evidencia Recopilada
