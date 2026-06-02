@@ -39,11 +39,13 @@ export async function POST(request: Request) {
 
       const content = completion.choices[0]?.message?.content;
       if (content) {
-        ai_processed_profile = JSON.parse(content);
+        // Limpieza de Markdown: Eliminar etiquetas ```json y ```
+        const cleanedContent = content.replace(/```(?:json)?/gi, '').trim();
+        ai_processed_profile = JSON.parse(cleanedContent);
       }
-    } catch (aiError) {
+    } catch (aiError: any) {
       console.error('[RPM API] Error de Groq:', aiError);
-      return NextResponse.json({ error: 'Fallo al procesar perfil con IA' }, { status: 500 });
+      return NextResponse.json({ error: aiError.message || String(aiError) }, { status: 500 });
     }
 
     // Guardar en la tabla rpm_profiles
@@ -65,8 +67,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, profile: data }, { status: 200 });
 
-  } catch (error) {
-    console.error('[RPM API] Error crítico:', error);
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+  } catch (error: any) {
+    console.error("Detalle exacto del error en /api/rpm:", error);
+    return NextResponse.json({ error: error.message || String(error) }, { status: 500 });
   }
 }
