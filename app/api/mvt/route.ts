@@ -4,25 +4,25 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { idea, profile, learnings } = body;
+    const { solution_title, interviewee_profile, key_learnings } = body;
 
-    if (!idea || !profile || !learnings) {
+    if (!solution_title || !interviewee_profile || !key_learnings) {
       return NextResponse.json({ error: 'Faltan campos obligatorios' }, { status: 400 });
     }
 
     const { data, error } = await supabaseAdmin
       .from('mvt_conversations')
       .insert({
-        idea_validated: idea,
-        interviewee_profile: profile,
-        key_learnings: learnings
+        solution_title,
+        interviewee_profile,
+        key_learnings
       })
       .select()
       .single();
 
     if (error) {
-      console.error('[MVT API] Error de Supabase:', error.message);
-      return NextResponse.json({ error: 'Error guardando MVT en la base de datos' }, { status: 500 });
+      console.error('[MVT API] Error de Supabase:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, mvt: data }, { status: 200 });

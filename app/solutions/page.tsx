@@ -20,9 +20,9 @@ export default function SolutionsEnginePage() {
 
   // MVT Form state
   const [mvtData, setMvtData] = useState({
-    idea: '',
-    profile: '',
-    learnings: ''
+    solution_title: '',
+    interviewee_profile: '',
+    key_learnings: ''
   });
   const [isSubmittingMvt, setIsSubmittingMvt] = useState(false);
   const [mvtSuccess, setMvtSuccess] = useState(false);
@@ -66,7 +66,7 @@ export default function SolutionsEnginePage() {
       if (!res.ok) throw new Error(data.error || 'Error guardando MVT');
       
       setMvtSuccess(true);
-      setMvtData({ idea: '', profile: '', learnings: '' });
+      setMvtData({ solution_title: '', interviewee_profile: '', key_learnings: '' });
     } catch (err: any) {
       alert(`Error: ${err.message}`);
     } finally {
@@ -176,8 +176,8 @@ export default function SolutionsEnginePage() {
               <input 
                 required
                 type="text" 
-                name="idea"
-                value={mvtData.idea}
+                name="solution_title"
+                value={mvtData.solution_title}
                 onChange={handleMvtChange}
                 placeholder="Ej. SaaS predictivo para logística..." 
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-zinc-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
@@ -188,8 +188,8 @@ export default function SolutionsEnginePage() {
               <input 
                 required
                 type="text" 
-                name="profile"
-                value={mvtData.profile}
+                name="interviewee_profile"
+                value={mvtData.interviewee_profile}
                 onChange={handleMvtChange}
                 placeholder="Ej. Gerente de Operaciones, 35 años..." 
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-zinc-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none"
@@ -201,8 +201,8 @@ export default function SolutionsEnginePage() {
             <label className="text-sm font-medium text-zinc-400">Aprendizajes Clave</label>
             <textarea 
               required
-              name="learnings"
-              value={mvtData.learnings}
+              name="key_learnings"
+              value={mvtData.key_learnings}
               onChange={handleMvtChange}
               placeholder="¿Qué insights descubriste? ¿Qué problemas reales confirmaron?" 
               className="w-full h-32 bg-zinc-950 border border-zinc-800 rounded-lg p-3 text-zinc-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none resize-none"
