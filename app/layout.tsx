@@ -108,7 +108,7 @@ export default function RootLayout({
                 <h3 className="px-3 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-3">Fase 5 — Validación</h3>
                 <ul className="space-y-1">
                   <li>
-                    <Link href="#" className="flex items-center px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-md transition-colors">
+                    <Link href="/mvt" className="flex items-center px-3 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 rounded-md transition-colors">
                       <FlaskConical className="w-4 h-4 mr-3" />
                       MVT
                     </Link>
