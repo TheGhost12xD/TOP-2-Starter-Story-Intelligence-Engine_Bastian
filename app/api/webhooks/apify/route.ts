@@ -61,7 +61,7 @@ export async function POST(request: Request) {
                 content: truncatedTranscript
               }
             ],
-            model: 'llama3-8b-8192',
+            model: 'llama-3.1-8b-instant',
             temperature: 0.1,
             response_format: { type: 'json_object' }
           });
