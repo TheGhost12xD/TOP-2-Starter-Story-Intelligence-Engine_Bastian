@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { ApifyClient } from 'apify-client';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { revalidatePath } from 'next/cache';
+import Groq from 'groq-sdk';
 
 export async function POST(request: Request) {
   let run_id = 'unknown';
@@ -41,11 +42,46 @@ export async function POST(request: Request) {
         continue;
       }
 
+      let ai_analysis = null;
+
+      try {
+        if (process.env.GROQ_API_KEY) {
+          const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+          const truncatedTranscript = transcript.substring(0, 6000);
+          
+          const completion = await groq.chat.completions.create({
+            messages: [
+              {
+                role: 'system',
+                content: "Eres un analista de negocios. Lee la siguiente transcripción de un video de Starter Story y devuelve ÚNICAMENTE un objeto JSON válido con las siguientes llaves: 'business_model' (string breve), 'revenue' (string con el ingreso mencionado, o 'No especificado'), 'problem_solved' (string corto), y 'key_strategy' (string corto). No incluyas markdown ni texto adicional."
+              },
+              {
+                role: 'user',
+                content: truncatedTranscript
+              }
+            ],
+            model: 'llama3-8b-8192',
+            temperature: 0.1,
+            response_format: { type: 'json_object' }
+          });
+
+          const content = completion.choices[0]?.message?.content;
+          if (content) {
+            ai_analysis = JSON.parse(content);
+          }
+        } else {
+          console.log('[Webhook] GROQ_API_KEY no configurada, omitiendo análisis IA');
+        }
+      } catch (aiError) {
+        console.error(`[Webhook] Error al procesar IA para ${youtube_video_id}:`, aiError);
+        ai_analysis = { error: 'Groq API error or parsing failed' };
+      }
+
       // Upsert estricto a Supabase usando supabaseAdmin (Service Role Key)
       const { error } = await supabaseAdmin
         .from('videos')
         .upsert(
-          { youtube_video_id, title, transcript },
+          { youtube_video_id, title, transcript, ai_analysis },
           { onConflict: 'youtube_video_id' }
         );
 
