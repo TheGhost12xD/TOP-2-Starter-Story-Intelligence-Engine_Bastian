@@ -2,6 +2,8 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 import ExtractForm from '@/components/ExtractForm';
 import { Play, CheckCircle2, ChevronRight, Video } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   // Fetch videos from Supabase
   const { data: videos, error } = await supabaseAdmin
@@ -9,7 +11,26 @@ export default async function Home() {
     .select('*')
     .order('created_at', { ascending: false });
 
-  const totalVideos = videos ? videos.length : 0;
+  const { count: countVideos } = await supabaseAdmin
+    .from('videos')
+    .select('*', { count: 'exact', head: true });
+    
+  const { count: countAnalizados } = await supabaseAdmin
+    .from('videos')
+    .select('*', { count: 'exact', head: true })
+    .not('ai_analysis', 'is', null);
+
+  const { count: countPainPoints } = await supabaseAdmin
+    .from('pain_points')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: countClasificaciones } = await supabaseAdmin
+    .from('rpm_profiles')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: countSoluciones } = await supabaseAdmin
+    .from('mvt_conversations')
+    .select('*', { count: 'exact', head: true });
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
@@ -32,11 +53,11 @@ export default async function Home() {
       {/* Stats Grid */}
       <section className="grid grid-cols-2 md:grid-cols-5 gap-4">
         {[
-          { label: 'VIDEOS', value: totalVideos },
-          { label: 'ANALIZADOS (IA)', value: 0 },
-          { label: 'PAIN POINTS', value: 0 },
-          { label: 'CLASIFICACIONES', value: 0 },
-          { label: 'SOLUCIONES', value: 0 },
+          { label: 'VIDEOS', value: countVideos || 0 },
+          { label: 'ANALIZADOS (IA)', value: countAnalizados || 0 },
+          { label: 'PAIN POINTS', value: countPainPoints || 0 },
+          { label: 'CLASIFICACIONES', value: countClasificaciones || 0 },
+          { label: 'SOLUCIONES', value: countSoluciones || 0 },
         ].map((stat, i) => (
           <div key={i} className="bg-zinc-950 rounded-xl border border-zinc-800 p-5 flex flex-col justify-between hover:border-zinc-700 transition-colors">
             <h3 className="text-[10px] font-semibold text-zinc-500 tracking-wider mb-3">{stat.label}</h3>
